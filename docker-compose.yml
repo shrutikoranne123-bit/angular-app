@@ -1,8 +1,14 @@
 services:
   frontend:
-    build: ./frontend
-    ports: ["80:80"]
+    # Update this path to match your actual folder name
+    build: ./front/frontend-app 
+    ports:
+      - "80:80"
+      
   backend:
-    build: ./backend
-    ports: ["3000:3000"]
-    env_file: .env
+    # Update this path to match your actual backend folder
+    build: ./back 
+    ports:
+      - "3000:3000"
+    # Ensure .env exists in the same folder as this docker-compose.yml
+    env_file: .env 
