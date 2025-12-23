@@ -1,4 +1,6 @@
 name: Deploy to EC2
+env:
+    DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
 on:
   push:
     branches: [ main ]
