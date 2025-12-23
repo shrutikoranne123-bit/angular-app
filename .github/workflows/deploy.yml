@@ -28,8 +28,7 @@ jobs:
       - name: Build and push Frontend
         uses: docker/build-push-action@v6
         with:
-          context: ./front/frontend-app
-          file: ./front/frontend-app/Dockerfile
+          context: ./frontend-app
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/frontend:latest
 
