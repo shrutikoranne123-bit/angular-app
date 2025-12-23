@@ -1,14 +1,55 @@
-services:
-  frontend:
-    # Update this path to match your actual folder name
-    build: ./front/frontend-app 
-    ports:
-      - "80:80"
-      
-  backend:
-    # Update this path to match your actual backend folder
-    build: ./back 
-    ports:
-      - "3000:3000"
-    # Ensure .env exists in the same folder as this docker-compose.yml
-    env_file: .env 
+name: Fullstack CI/CD to AWS EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./back
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/backend:latest
+
+      - name: Build and push Frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./front/frontend-app
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest
+
+      - name: Deploy to EC2 Instance
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_PUBLIC_IP }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          script: |
+            # Login to Docker Hub on EC2
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+            # Deploy Backend
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/backend:latest
+            docker stop backend-container || true
+            docker rm backend-container || true
+            docker run -d --name backend-container -p 3000:3000 ${{ secrets.DOCKERHUB_USERNAME }}/backend:latest
+
+            # Deploy Frontend
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest
+            docker stop frontend-container || true
+            docker rm frontend-container || true
+            docker run -d --name frontend-container -p 80:80 ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest
