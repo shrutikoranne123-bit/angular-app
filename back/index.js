@@ -1,14 +1,18 @@
+// server.js
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const port = process.env.PORT || 3000;
 
-app.use(cors()); // Allow Angular to connect
+app.use(cors()); // Critical for Angular communication
 
-app.get('/api/status', (req, res) => {
-  res.json({ status: 'Backend is running on AWS EC2!', timestamp: new Date() });
+const PORT = 3000;
+const HOST = '0.0.0.0'; // Add this line
+
+app.get('/api/data', (req, res) => {
+  res.json({ message: "Success! Backend reached." });
 });
 
-app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
+// Update this line:
+app.listen(PORT, HOST, () => {
+  console.log(`Server is running on http://${HOST}:${PORT}`);
 });
